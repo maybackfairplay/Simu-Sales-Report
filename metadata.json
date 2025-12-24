@@ -1,0 +1,5 @@
+{
+  "name": "Simu Sales Report",
+  "description": "A high-performance sales reporting dashboard that processes dealership CSV data and generates AI-powered management reports using Gemini.",
+  "requestFramePermissions": []
+}

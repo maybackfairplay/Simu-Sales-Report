@@ -1,0 +1,125 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AutoSales | NeuroEdition 2026</title>
+    <link id="dynamic-favicon" rel="icon" type="image/png" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%23007aff%22/></svg>">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --ios-bg: #f2f2f7;
+            --ios-accent: #007aff;
+            --ios-glass: rgba(255, 255, 255, 0.45);
+        }
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #f2f2f7;
+            color: #1c1c1e;
+            letter-spacing: -0.03em;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+        /* Spatial Neural Background */
+        .neural-mesh {
+            position: fixed;
+            top: -20%;
+            left: -20%;
+            width: 140%;
+            height: 140%;
+            z-index: -1;
+            background: 
+                radial-gradient(circle at 80% 20%, #e0e7ff 0%, transparent 40%),
+                radial-gradient(circle at 20% 80%, #fef3c7 0%, transparent 40%),
+                radial-gradient(circle at 50% 50%, #ffffff 0%, transparent 70%);
+            filter: blur(100px);
+            animation: mesh-float 40s ease-in-out infinite alternate;
+        }
+        @keyframes mesh-float {
+            0% { transform: scale(1) rotate(0deg); }
+            100% { transform: scale(1.1) rotate(5deg); }
+        }
+        /* Liquid Glassmorphism */
+        .glass-2026 {
+            background: var(--ios-glass);
+            backdrop-filter: blur(80px) saturate(200%);
+            -webkit-backdrop-filter: blur(80px) saturate(200%);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 
+                0 20px 60px -15px rgba(0, 0, 0, 0.05),
+                inset 0 0 0 1px rgba(255, 255, 255, 0.3);
+        }
+        .glass-dark-2026 {
+            background: rgba(10, 10, 12, 0.85);
+            backdrop-filter: blur(60px) saturate(150%);
+            -webkit-backdrop-filter: blur(60px) saturate(150%);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 30px 100px -20px rgba(0,0,0,0.4);
+            color: white;
+        }
+        .squircle { border-radius: 48px; }
+        .squircle-sm { border-radius: 28px; }
+        
+        .haptic-card {
+            transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .haptic-card:hover {
+            transform: translateY(-8px) scale(1.01);
+            box-shadow: 0 40px 80px -20px rgba(0,0,0,0.12);
+        }
+        .haptic-card:active { transform: scale(0.97); }
+
+        .glow-blue { border: 1px solid rgba(0, 122, 255, 0.2); box-shadow: 0 0 40px -10px rgba(0, 122, 255, 0.15); }
+        .glow-indigo { border: 1px solid rgba(88, 86, 214, 0.2); box-shadow: 0 0 40px -10px rgba(88, 86, 214, 0.15); }
+
+        /* Staggered Animations */
+        .stagger-in > * {
+            opacity: 0;
+            transform: translateY(20px);
+            animation: staggerIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        @keyframes staggerIn {
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .stagger-in > *:nth-child(1) { animation-delay: 0.1s; }
+        .stagger-in > *:nth-child(2) { animation-delay: 0.2s; }
+        .stagger-in > *:nth-child(3) { animation-delay: 0.3s; }
+        .stagger-in > *:nth-child(4) { animation-delay: 0.4s; }
+
+        /* Typography */
+        .text-spatial {
+            background: linear-gradient(180deg, #1c1c1e 0%, #444446 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .no-export { display: inherit; }
+        .export-mode .no-export { display: none !important; }
+        
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 10px; }
+    </style>
+<script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@^19.2.3",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "react/": "https://esm.sh/react@^19.2.3/",
+    "recharts": "https://esm.sh/recharts@^3.6.0",
+    "@google/genai": "https://esm.sh/@google/genai@^1.34.0",
+    "html2canvas": "https://esm.sh/html2canvas@1.4.1",
+    "jspdf": "https://esm.sh/jspdf@2.5.1"
+  }
+}
+</script>
+</head>
+<body>
+    <div class="neural-mesh"></div>
+    <div id="root"></div>
+</body>
+</html>
