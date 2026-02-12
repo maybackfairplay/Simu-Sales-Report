@@ -14,23 +14,12 @@ export const TrendAnalysis: React.FC<TrendAnalysisProps> = ({ stats, prevStats }
 
   const calculateDelta = (curr: number, prev: number) => {
     const delta = curr - prev;
-    const percent = prev !== 0 ? ((delta / prev) * 100).toFixed(1) : '100';
+    const percent = prev !== 0 ? ((delta / prev) * 100).toFixed(0) : '100';
     return { delta, percent, isUp: delta >= 0 };
   };
 
   const salesDelta = calculateDelta(stats.totalSales, prevStats.totalSales);
   
-  const getTopShifter = (currList: {name: string, sales: number}[], prevList: {name: string, sales: number}[]) => {
-    const prevMap = new Map(prevList.map(i => [i.name, i.sales]));
-    const shifts = currList.map(item => {
-      const prevSales = prevMap.get(item.name) || 0;
-      return { name: item.name, diff: item.sales - prevSales };
-    }).sort((a, b) => b.diff - a.diff);
-    return shifts[0];
-  };
-
-  const topShopShifter = getTopShifter(stats.byShop, prevStats.byShop);
-
   const getDetailedComparison = (currList: {name: string, sales: number}[], prevList: {name: string, sales: number}[]) => {
     const prevMap = new Map(prevList.map(i => [i.name, i.sales]));
     const allNames = Array.from(new Set([...currList.map(i => i.name), ...prevList.map(i => i.name)]));
@@ -43,79 +32,90 @@ export const TrendAnalysis: React.FC<TrendAnalysisProps> = ({ stats, prevStats }
     }).sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta)).slice(0, 10);
   };
 
-  const shopComparison = getDetailedComparison(stats.byShop, prevStats.byShop);
+  const dealerComparison = getDetailedComparison(stats.byDealer, prevStats.byDealer);
+  const modelComparison = getDetailedComparison(stats.byModel, prevStats.byModel);
+  const branchComparison = getDetailedComparison(stats.byBranch, prevStats.byBranch);
 
   return (
     <>
-      <div onClick={() => setIsModalOpen(true)} className="glass-2026 squircle p-12 haptic-card relative group cursor-pointer overflow-hidden border-indigo-200/50 glow-indigo">
-        <div className="relative z-10">
-          <div className="flex items-center justify-between mb-12">
-            <div>
-              <span className="text-[10px] font-black text-indigo-600 uppercase tracking-[0.4em] mb-2 block">Cycle Variance Analyzer</span>
-              <h3 className="text-4xl font-black text-slate-900 tracking-tighter">Temporal Comparison</h3>
-            </div>
-            <div className="px-6 py-3 glass-dark-2026 squircle-sm text-[10px] font-black tracking-widest uppercase shadow-xl">Audit Active</div>
+      <div 
+        onClick={() => setIsModalOpen(true)} 
+        className="neon-card p-8 cursor-pointer group animate-in border-white/5 hover:border-[#9dff00]/30"
+      >
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h3 className="text-xl font-black tracking-tighter text-white uppercase">Cycle Variance</h3>
+            <p className="text-[10px] font-bold text-slate-500 tracking-widest uppercase">Temporal audit</p>
           </div>
+          <div className="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center border border-white/10 group-hover:border-[#9dff00]/50 transition-colors">
+             <svg className="w-5 h-5 text-[#9dff00]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+          </div>
+        </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
-            <div className="p-8 squircle-sm bg-white/60 border border-white/80">
-              <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-6">Volume Momentum</div>
-              <div className="flex items-baseline gap-4">
-                <span className="text-5xl font-black text-slate-900">{stats.totalSales}</span>
-                <span className={`text-sm font-black flex items-center gap-1 ${salesDelta.isUp ? 'text-emerald-600' : 'text-rose-600'}`}>
-                  {salesDelta.isUp ? '↑' : '↓'} {salesDelta.percent}%
-                </span>
-              </div>
+        <div className="grid grid-cols-1 gap-6">
+          <div className="p-6 bg-white/5 rounded-2xl border border-white/5">
+            <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-4">Global Volume Shift</p>
+            <div className="flex items-baseline gap-3">
+              <span className="text-4xl font-black text-white">{stats.totalSales}</span>
+              <span className={`text-xs font-black px-2 py-0.5 rounded-md ${salesDelta.isUp ? 'text-[#9dff00] bg-[#9dff00]/10' : 'text-[#ff007a] bg-[#ff007a]/10'}`}>
+                {salesDelta.isUp ? '↑' : '↓'} {salesDelta.percent}%
+              </span>
             </div>
-
-            <div className="p-8 squircle-sm bg-indigo-600 text-white shadow-2xl">
-              <div className="text-[10px] font-black text-indigo-200 uppercase tracking-widest mb-6">Shop Leader</div>
-              <div className="text-2xl font-black truncate">{stats.topShop}</div>
-              <p className="mt-4 text-xs font-semibold opacity-80">Shift from previous cycle captured.</p>
-            </div>
-
-            <div className="p-8 squircle-sm bg-white/40 border border-white/60">
-              <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-6">Peak Efficiency</div>
-              <div className="text-2xl font-black text-slate-900 truncate">{topShopShifter?.name || 'N/A'}</div>
-              <div className="mt-4 flex items-center gap-2">
-                <span className="text-xs font-black text-emerald-600 uppercase tracking-widest">Net +{topShopShifter?.diff || 0} Growth</span>
-              </div>
-            </div>
+          </div>
+          <div className="p-6 bg-[#1a1d29] rounded-2xl border-l-4 border-[#ff007a]">
+            <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-4">Market Leader</p>
+            <div className="text-lg font-black text-white truncate uppercase tracking-tight">{stats.topDealer}</div>
+            <p className="mt-2 text-[10px] text-slate-400 font-bold uppercase tracking-widest">Active Dominance</p>
           </div>
         </div>
       </div>
 
       {isModalOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 sm:p-12">
-          <div className="absolute inset-0 bg-white/40 backdrop-blur-[120px]" onClick={() => setIsModalOpen(false)} />
-          <div className="relative glass-2026 w-full max-w-6xl max-h-[90vh] squircle shadow-3xl overflow-hidden animate-in zoom-in-95 duration-500 flex flex-col">
-            <div className="p-12 border-b border-white/40 flex items-center justify-between">
+        <div className="fixed inset-0 z-[700] bg-black/80 backdrop-blur-3xl flex items-center justify-center p-6">
+          <div className="neon-card w-full max-w-5xl max-h-[85vh] flex flex-col animate-in shadow-[0_0_100px_rgba(0,0,0,0.8)] border-white/10">
+            <div className="p-8 border-b border-white/5 flex items-center justify-between sticky top-0 bg-[#1a1d29]/90 backdrop-blur-md z-10">
               <div>
-                <span className="text-[11px] font-black text-indigo-600 uppercase tracking-[0.4em] mb-2 block">Enterprise Intelligence</span>
-                <h2 className="text-5xl font-black text-slate-900 tracking-tighter">Shop Variance Audit</h2>
+                <h2 className="text-2xl font-black tracking-tighter text-white uppercase">Multi-Vector Drill-down</h2>
+                <p className="text-[10px] font-bold text-slate-500 tracking-widest uppercase mt-1">Cross-Period Performance Variance</p>
               </div>
-              <button onClick={() => setIsModalOpen(false)} className="w-16 h-16 glass-2026 squircle-sm flex items-center justify-center">
-                <svg className="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M6 18L18 6M6 6l12 12" /></svg>
+              <button onClick={() => setIsModalOpen(false)} className="w-10 h-10 flex items-center justify-center bg-white/5 rounded-full hover:bg-white/10">
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12" /></svg>
               </button>
             </div>
-            <div className="flex-1 overflow-y-auto p-12">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-                 {shopComparison.map((item, idx) => (
-                    <div key={idx} className="p-8 glass-2026 squircle-sm border-white/60">
-                       <div className="flex justify-between items-center mb-6">
-                          <h4 className="font-black text-xl tracking-tighter text-slate-900">{item.name}</h4>
-                          <div className={`px-4 py-1.5 rounded-full text-[10px] font-black ${item.isUp ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`}>
-                             {item.isUp ? '↑' : '↓'} {item.percent}%
-                          </div>
-                       </div>
-                       <div className="flex items-center gap-8">
-                          <div><span className="text-[9px] font-black text-slate-400 uppercase block">Current</span><span className="text-3xl font-black">{item.curr}</span></div>
-                          <div className="h-10 w-px bg-slate-200"></div>
-                          <div><span className="text-[9px] font-black text-slate-400 uppercase block">Prev</span><span className="text-2xl font-bold text-slate-400">{item.prev}</span></div>
-                       </div>
-                    </div>
-                 ))}
-              </div>
+            
+            <div className="flex-1 overflow-y-auto p-8 custom-scroll space-y-12">
+               {/* Dealership Section */}
+               <section>
+                 <div className="flex items-center gap-4 mb-6 border-b border-white/5 pb-2">
+                   <h3 className="text-xs font-black text-[#00d2ff] uppercase tracking-[0.3em]">Node Analysis: Dealerships</h3>
+                   <div className="flex-grow h-px bg-gradient-to-r from-[#00d2ff]/20 to-transparent"></div>
+                 </div>
+                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {dealerComparison.map((item, idx) => <ComparisonCard key={idx} item={item} />)}
+                 </div>
+               </section>
+
+               {/* Branch Section */}
+               <section>
+                 <div className="flex items-center gap-4 mb-6 border-b border-white/5 pb-2">
+                   <h3 className="text-xs font-black text-[#9dff00] uppercase tracking-[0.3em]">Regional Hubs: Branches</h3>
+                   <div className="flex-grow h-px bg-gradient-to-r from-[#9dff00]/20 to-transparent"></div>
+                 </div>
+                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {branchComparison.map((item, idx) => <ComparisonCard key={idx} item={item} />)}
+                 </div>
+               </section>
+
+               {/* Model Section */}
+               <section>
+                 <div className="flex items-center gap-4 mb-6 border-b border-white/5 pb-2">
+                   <h3 className="text-xs font-black text-[#ff007a] uppercase tracking-[0.3em]">Product Vectors: Models</h3>
+                   <div className="flex-grow h-px bg-gradient-to-r from-[#ff007a]/20 to-transparent"></div>
+                 </div>
+                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {modelComparison.map((item, idx) => <ComparisonCard key={idx} item={item} />)}
+                 </div>
+               </section>
             </div>
           </div>
         </div>
@@ -123,3 +123,31 @@ export const TrendAnalysis: React.FC<TrendAnalysisProps> = ({ stats, prevStats }
     </>
   );
 };
+
+// Fixed ComparisonCard: Using React.FC typing to correctly handle the 'key' prop in map iterations
+const ComparisonCard: React.FC<{ item: any }> = ({ item }) => (
+  <div className="p-6 border border-white/5 rounded-2xl bg-white/[0.02] hover:bg-white/[0.05] transition-all group">
+    <div className="flex justify-between items-start mb-6">
+      <h4 className="font-black text-[11px] tracking-tight text-slate-300 uppercase pr-4 group-hover:text-white transition-colors">{item.name}</h4>
+      <div className="flex flex-col items-end gap-1">
+        <span className={`text-[9px] font-black px-1.5 py-0.5 rounded shadow-lg ${item.isUp ? 'bg-[#9dff00]/20 text-[#9dff00]' : 'bg-[#ff007a]/20 text-[#ff007a]'}`}>
+          {item.isUp ? '+' : ''}{item.delta}
+        </span>
+        <span className={`text-[8px] font-bold ${item.isUp ? 'text-[#9dff00]/60' : 'text-[#ff007a]/60'}`}>
+          {item.isUp ? '▲' : '▼'} {item.percent}%
+        </span>
+      </div>
+    </div>
+    <div className="flex items-center justify-between">
+      <div className="flex flex-col">
+        <span className="text-[8px] font-black text-slate-600 uppercase mb-1">Current</span>
+        <span className="text-xl font-black text-white">{item.curr}</span>
+      </div>
+      <div className="h-8 w-px bg-white/5"></div>
+      <div className="flex flex-col items-end">
+        <span className="text-[8px] font-black text-slate-600 uppercase mb-1">Prior</span>
+        <span className="text-lg font-bold text-slate-500">{item.prev}</span>
+      </div>
+    </div>
+  </div>
+);

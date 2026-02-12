@@ -4,105 +4,165 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AutoSales | NeuroEdition 2026</title>
-    <link id="dynamic-favicon" rel="icon" type="image/png" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%23007aff%22/></svg>">
+    <title>Simu Intelligence | Strategic Audit</title>
+    <link rel="icon" type="image/png" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%2300afa9%22/><path d=%22M30 70v-30M50 70v-40M70 70v-20%22 stroke=%22white%22 stroke-width=%228%22 stroke-linecap=%22round%22/></svg>">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --ios-bg: #f2f2f7;
-            --ios-accent: #007aff;
-            --ios-glass: rgba(255, 255, 255, 0.45);
+            --bg: #030712;
+            --card: rgba(15, 23, 42, 0.4);
+            --border: rgba(255, 255, 255, 0.06);
+            --neon-cyan: #00afa9; /* Watu Teal */
+            --neon-lime: #8cc63f; /* Watu Lime */
+            --neon-pink: #f2264b; /* Watu Pink */
+            --neon-amber: #fbb040; /* Watu Amber */
+            --text-main: #f8fafc;
+            --text-dim: #94a3b8;
+            --grid-color: rgba(0, 175, 169, 0.02);
+            --panel: #0f1117;
+            --input-bg: rgba(0, 0, 0, 0.4);
+            --card-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+            --nav-bg: rgba(15, 17, 23, 0.6);
         }
+
+        body.light {
+            --bg: #f8fafc;
+            --card: #ffffff;
+            --border: rgba(0, 175, 169, 0.1);
+            --neon-cyan: #008f8a;
+            --neon-lime: #6f9b31;
+            --neon-pink: #d11f40;
+            --neon-amber: #d19235;
+            --text-main: #0f172a;
+            --text-dim: #64748b;
+            --grid-color: rgba(0, 175, 169, 0.05);
+            --panel: #ffffff;
+            --input-bg: #f1f5f9;
+            --card-shadow: 
+                0 1px 3px 0 rgba(0, 0, 0, 0.05),
+                0 1px 2px 0 rgba(0, 0, 0, 0.03),
+                0 20px 25px -5px rgba(0, 0, 0, 0.03),
+                0 10px 10px -5px rgba(0, 0, 0, 0.02);
+            --nav-bg: rgba(255, 255, 255, 0.7);
+        }
+
         body {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            background-color: #f2f2f7;
-            color: #1c1c1e;
-            letter-spacing: -0.03em;
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
             overflow-x: hidden;
-            -webkit-font-smoothing: antialiased;
+            background-image: 
+                linear-gradient(var(--grid-color) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+            background-size: 40px 40px;
+            transition: background-color 0.5s cubic-bezier(0.4, 0, 0.2, 1), color 0.5s ease;
         }
-        /* Spatial Neural Background */
-        .neural-mesh {
+
+        .mesh-overlay {
             position: fixed;
-            top: -20%;
-            left: -20%;
-            width: 140%;
-            height: 140%;
+            inset: 0;
+            background: radial-gradient(circle at 50% -20%, rgba(0, 175, 169, 0.05), transparent 60%);
+            pointer-events: none;
             z-index: -1;
-            background: 
-                radial-gradient(circle at 80% 20%, #e0e7ff 0%, transparent 40%),
-                radial-gradient(circle at 20% 80%, #fef3c7 0%, transparent 40%),
-                radial-gradient(circle at 50% 50%, #ffffff 0%, transparent 70%);
-            filter: blur(100px);
-            animation: mesh-float 40s ease-in-out infinite alternate;
         }
-        @keyframes mesh-float {
-            0% { transform: scale(1) rotate(0deg); }
-            100% { transform: scale(1.1) rotate(5deg); }
+
+        .neon-card {
+            background: var(--card);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            color: var(--text-main);
+            box-shadow: var(--card-shadow);
         }
-        /* Liquid Glassmorphism */
-        .glass-2026 {
-            background: var(--ios-glass);
-            backdrop-filter: blur(80px) saturate(200%);
-            -webkit-backdrop-filter: blur(80px) saturate(200%);
-            border: 1px solid rgba(255, 255, 255, 0.5);
-            box-shadow: 
-                0 20px 60px -15px rgba(0, 0, 0, 0.05),
-                inset 0 0 0 1px rgba(255, 255, 255, 0.3);
+
+        .neon-card:hover {
+            border-color: rgba(0, 175, 169, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.08);
         }
-        .glass-dark-2026 {
-            background: rgba(10, 10, 12, 0.85);
-            backdrop-filter: blur(60px) saturate(150%);
-            -webkit-backdrop-filter: blur(60px) saturate(150%);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            box-shadow: 0 30px 100px -20px rgba(0,0,0,0.4);
-            color: white;
+
+        body.light .neon-card:hover {
+            border-color: rgba(0, 175, 169, 0.2);
         }
-        .squircle { border-radius: 48px; }
-        .squircle-sm { border-radius: 28px; }
+
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+
+        .btn-neon {
+            background: var(--input-bg);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 0.6rem 1.4rem;
+            border-radius: 14px;
+            font-weight: 700;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        }
+
+        .btn-neon:hover {
+            background: var(--text-main);
+            color: var(--bg);
+            border-color: var(--text-main);
+            transform: translateY(-1px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-neon-cyan { 
+            border-color: rgba(0, 175, 169, 0.3); 
+            color: var(--neon-cyan);
+            background: rgba(0, 175, 169, 0.05);
+        }
+
+        body.light .btn-neon-cyan {
+            border-color: rgba(0, 143, 138, 0.2);
+            background: rgba(0, 143, 138, 0.03);
+        }
         
-        .haptic-card {
-            transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        .btn-neon-cyan:hover { 
+            background: var(--neon-cyan); 
+            color: white; 
+            box-shadow: 0 0 25px rgba(0, 175, 169, 0.3); 
         }
-        .haptic-card:hover {
-            transform: translateY(-8px) scale(1.01);
-            box-shadow: 0 40px 80px -20px rgba(0,0,0,0.12);
-        }
-        .haptic-card:active { transform: scale(0.97); }
 
-        .glow-blue { border: 1px solid rgba(0, 122, 255, 0.2); box-shadow: 0 0 40px -10px rgba(0, 122, 255, 0.15); }
-        .glow-indigo { border: 1px solid rgba(88, 86, 214, 0.2); box-shadow: 0 0 40px -10px rgba(88, 86, 214, 0.15); }
+        .custom-scroll::-webkit-scrollbar { width: 5px; }
+        .custom-scroll::-webkit-scrollbar-track { background: transparent; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.05); border-radius: 10px; }
+        .custom-scroll::-webkit-scrollbar-thumb:hover { background: var(--neon-cyan); }
 
-        /* Staggered Animations */
-        .stagger-in > * {
+        .animate-stagger > * {
             opacity: 0;
-            transform: translateY(20px);
-            animation: staggerIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            animation: fadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
-        @keyframes staggerIn {
+        
+        .animate-stagger > *:nth-child(1) { animation-delay: 0.1s; }
+        .animate-stagger > *:nth-child(2) { animation-delay: 0.2s; }
+        .animate-stagger > *:nth-child(3) { animation-delay: 0.3s; }
+        .animate-stagger > *:nth-child(4) { animation-delay: 0.4s; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        .stagger-in > *:nth-child(1) { animation-delay: 0.1s; }
-        .stagger-in > *:nth-child(2) { animation-delay: 0.2s; }
-        .stagger-in > *:nth-child(3) { animation-delay: 0.3s; }
-        .stagger-in > *:nth-child(4) { animation-delay: 0.4s; }
 
-        /* Typography */
-        .text-spatial {
-            background: linear-gradient(180deg, #1c1c1e 0%, #444446 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+        .recharts-text {
+            fill: var(--text-dim) !important;
+            font-weight: 600;
         }
-
-        .no-export { display: inherit; }
-        .export-mode .no-export { display: none !important; }
-        
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 10px; }
+        .recharts-cartesian-grid-horizontal line,
+        .recharts-cartesian-grid-vertical line {
+            stroke: var(--border) !important;
+        }
     </style>
 <script type="importmap">
 {
@@ -118,8 +178,8 @@
 }
 </script>
 </head>
-<body>
-    <div class="neural-mesh"></div>
+<body class="selection:bg-[#00afa9] selection:text-white">
+    <div class="mesh-overlay"></div>
     <div id="root"></div>
 </body>
 </html>

@@ -13,7 +13,6 @@ export const parseCSV = (file: File): Promise<SaleRecord[]> => {
         const lines = text.split(/\r?\n/).filter(line => line.trim() !== '');
         if (lines.length < 2) return resolve([]);
 
-        // Robust CSV splitting logic (handles quotes)
         const splitCSVLine = (line: string, sep: string) => {
           const result = [];
           let current = '';
@@ -37,15 +36,10 @@ export const parseCSV = (file: File): Promise<SaleRecord[]> => {
         const separator = headerLine.includes('\t') ? '\t' : (headerLine.includes(';') ? ';' : ',');
         const headers = splitCSVLine(headerLine, separator).map(h => h.toLowerCase().trim());
 
-        console.log('Detected CSV Headers:', headers);
-
-        // Map column indices with more flexible matching
         const getIdx = (name: string) => {
           const lowerName = name.toLowerCase().trim();
-          // Try exact match first
           let idx = headers.indexOf(lowerName);
           if (idx !== -1) return idx;
-          // Try includes match
           idx = headers.findIndex(h => h.includes(lowerName) || lowerName.includes(h));
           return idx;
         };
@@ -60,10 +54,11 @@ export const parseCSV = (file: File): Promise<SaleRecord[]> => {
           chasisNo: getIdx('chasis_no'),
           make: getIdx('make'),
           model: getIdx('model'),
-          type: getIdx('type')
+          type: getIdx('type'),
+          status: getIdx('status') !== -1 ? getIdx('status') : getIdx('stage')
         };
 
-        const records: SaleRecord[] = lines.slice(1).map((line, lineIdx) => {
+        const records: SaleRecord[] = lines.slice(1).map((line) => {
           const values = splitCSVLine(line, separator);
           const getValue = (i: number) => (i !== -1 && values[i] !== undefined) ? values[i].replace(/^"|"$/g, '').trim() : '';
           
@@ -77,7 +72,8 @@ export const parseCSV = (file: File): Promise<SaleRecord[]> => {
             chasisNo: getValue(idxMap.chasisNo),
             make: getValue(idxMap.make),
             model: getValue(idxMap.model) || 'Unknown Model',
-            type: getValue(idxMap.type)
+            type: getValue(idxMap.type),
+            status: getValue(idxMap.status)
           };
         });
 

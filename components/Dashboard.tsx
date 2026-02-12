@@ -1,28 +1,29 @@
 
-import React, { useMemo } from 'react';
+import React from 'react';
 import { 
-  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, 
-  PieChart, Pie, Legend, LabelList, Rectangle
+  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, 
+  LabelList, Cell, Legend, PieChart, Pie
 } from 'recharts';
-import { DashboardStats } from '../types';
+import { DashboardStats, AggregatedData } from '../types';
 
-const COLORS = ['#007AFF', '#5856D6', '#FF2D55', '#34C759', '#AF52DE', '#FF9500', '#5AC8FA'];
+const COLORS = ['#00afa9', '#8cc63f', '#f2264b', '#fbb040', '#7a5af8', '#6366f1'];
 
-const CustomTooltip = ({ active, payload, type }: any) => {
+const CustomTooltip = ({ active, payload }: any) => {
   if (active && payload?.[0]) {
     const data = payload[0].payload;
     return (
-      <div className="glass-dark-2026 px-6 py-4 squircle-sm shadow-3xl border-white/10 animate-in fade-in zoom-in-95 duration-200">
-        <p className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 mb-2">{data.name}</p>
-        <div className="flex items-baseline gap-3">
-           <p className="text-3xl font-black text-white">{payload[0].value}</p>
-           <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Units</span>
+      <div className="bg-[var(--panel)] border border-[var(--border)] p-6 rounded-[24px] shadow-2xl backdrop-blur-2xl ring-1 ring-black/5 animate-in">
+        <p className="text-[10px] font-black text-[var(--text-dim)] uppercase tracking-[0.3em] mb-3">{data.name || data.model}</p>
+        <div className="flex items-center gap-8">
+          <p className="text-3xl font-black text-[var(--text-main)]">{data.sales || data.value} <span className="text-[10px] font-bold text-[var(--neon-cyan)] ml-1">UNITS</span></p>
+          {data.share && (
+            <p className="text-xs font-black text-emerald-500 px-2 py-1 bg-emerald-500/10 rounded-lg">{data.share}% <span className="text-[8px] text-emerald-500/60 ml-1 uppercase">SHARE</span></p>
+          )}
         </div>
-        {type === 'pie' && data.percent && (
-          <div className="mt-2 pt-2 border-t border-white/10">
-            <span className="text-[10px] font-black text-blue-400 uppercase tracking-widest">
-              Share: {data.percent}%
-            </span>
+        {(data.prevSales !== undefined) && (
+          <div className="mt-4 pt-4 border-t border-[var(--border)] flex items-center justify-between gap-6">
+             <span className="text-[9px] font-bold text-[var(--text-dim)] uppercase tracking-widest">Baseline Audit</span>
+             <span className="text-[11px] font-mono font-bold text-[var(--text-dim)]">{data.prevSales}</span>
           </div>
         )}
       </div>
@@ -31,72 +32,163 @@ const CustomTooltip = ({ active, payload, type }: any) => {
   return null;
 };
 
-export const Dashboard: React.FC<{ stats: DashboardStats, prevStats: DashboardStats | null }> = ({ stats }) => {
+const ClickableTick = (props: any) => {
+  const { x, y, payload, onFocus, currentFocus } = props;
+  const isActive = payload.value === currentFocus;
   
-  // Prepare Pie Data with percentages for the enhanced tooltip
-  const pieData = useMemo(() => {
-    const total = stats.byModel.reduce((acc, curr) => acc + curr.sales, 0);
-    return stats.byModel.slice(0, 8).map(item => ({
-      ...item,
-      percent: total > 0 ? ((item.sales / total) * 100).toFixed(1) : '0'
-    }));
-  }, [stats.byModel]);
+  return (
+    <g transform={`translate(${x},${y})`}>
+      <text
+        x={-14}
+        y={0}
+        dy={4}
+        textAnchor="end"
+        fill={isActive ? 'var(--neon-lime)' : 'var(--text-dim)'}
+        className="text-[10px] font-black uppercase tracking-tight cursor-pointer transition-colors duration-300 hover:fill-[var(--text-main)]"
+        onClick={(e) => {
+          e.stopPropagation();
+          onFocus(payload.value);
+        }}
+      >
+        {payload.value.length > 24 ? payload.value.substring(0, 22) + '...' : payload.value}
+      </text>
+    </g>
+  );
+};
+
+interface DashboardProps {
+  stats: DashboardStats;
+  prevStats: DashboardStats | null;
+  focusFilter: string | null;
+  onFocus: (term: string) => void;
+  isGlobalFocusMode?: boolean;
+  onToggleGlobalFocusMode?: () => void;
+}
+
+export const Dashboard: React.FC<DashboardProps> = ({ 
+  stats, 
+  prevStats, 
+  focusFilter, 
+  onFocus, 
+  isGlobalFocusMode, 
+  onToggleGlobalFocusMode 
+}) => {
+  const modelData = stats.byModel.slice(0, 6).map((m, i) => ({
+    name: m.name,
+    value: m.sales,
+    share: Math.round((m.sales / stats.totalSales) * 100)
+  }));
+
+  const dealersWithShare = stats.byDealer.slice(0, 30).map(d => {
+    const prevDealer = prevStats?.byDealer.find(pd => pd.name === d.name);
+    return {
+      ...d,
+      share: Math.round((d.sales / stats.totalSales) * 100),
+      prevSales: prevDealer?.sales
+    };
+  });
+
+  const chartHeight = Math.max(500, dealersWithShare.length * 48);
+  const dimClass = "transition-all duration-700 " + (isGlobalFocusMode ? "opacity-10 blur-[2px] pointer-events-none scale-95" : "opacity-100");
 
   return (
-    <div className="space-y-12 stagger-in">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-        {/* Shop Performance - Individual Entities */}
-        <div className="glass-2026 p-12 squircle haptic-card glow-blue">
-          <div className="flex justify-between items-start mb-16">
-            <div>
-              <span className="text-[10px] font-black text-blue-600 uppercase tracking-[0.4em] mb-2 block">Individual Shop Rank</span>
-              <h3 className="text-4xl font-black tracking-tighter text-slate-900 leading-none">Shop Performance</h3>
-            </div>
-            <div className="w-14 h-14 glass-2026 squircle-sm flex items-center justify-center text-2xl shadow-lg">🏛️</div>
+    <div className="space-y-16">
+      {/* PRIMARY: Dealership Performance */}
+      <div className={`neon-card p-12 group transition-all duration-700 relative z-50 ${isGlobalFocusMode ? 'shadow-[0_0_80px_rgba(0,175,169,0.15)] border-[var(--neon-cyan)]' : ''}`}>
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-16 gap-8 relative z-10">
+          <div>
+            <h3 className="text-3xl font-black tracking-tight text-[var(--text-main)] uppercase italic">Market <span className="text-[var(--neon-cyan)]">Concentration</span></h3>
+            <p className="text-[10px] font-bold text-[var(--text-dim)] tracking-[0.4em] uppercase mt-3">
+              {prevStats ? 'Cross-Period Variance Audit' : 'Consolidated Performance Vector'}
+            </p>
           </div>
-          <div className="h-[400px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={stats.byDealer.slice(0, 10)} layout="vertical" margin={{ left: 20, right: 80 }}>
-                <XAxis type="number" hide />
-                <YAxis dataKey="name" type="category" width={140} tick={{ fill: '#8e8e93', fontSize: 10, fontWeight: 800 }} axisLine={false} tickLine={false} />
-                <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(0,122,255,0.03)', radius: 16 }} />
-                <Bar 
-                  dataKey="sales" 
-                  radius={[0, 20, 20, 0]} 
-                  barSize={24} 
-                  fill="#007AFF"
-                  activeBar={<Rectangle fill="#0056b3" stroke="#007AFF" strokeWidth={2} />}
-                >
-                  <LabelList dataKey="sales" position="right" offset={20} style={{ fontSize: 14, fontWeight: 900, fill: '#1c1c1e' }} />
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
+          <div className="flex items-center gap-3">
+            <button 
+              onClick={onToggleGlobalFocusMode}
+              className={`px-6 py-2.5 rounded-xl border transition-all text-[10px] font-black uppercase tracking-[0.3em] flex items-center gap-2 ${
+                isGlobalFocusMode 
+                ? 'bg-[var(--neon-cyan)] border-[var(--neon-cyan)] text-white shadow-[0_0_20px_rgba(0,175,169,0.4)]' 
+                : 'border-[var(--border)] text-[var(--text-dim)] hover:text-[var(--text-main)] hover:border-[var(--text-main)]'
+              }`}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+              </svg>
+              {isGlobalFocusMode ? 'EXIT_FOCUS' : 'FOCUS_MODE'}
+            </button>
+            <button 
+              onClick={() => onFocus('')}
+              className={`px-6 py-2.5 rounded-xl border transition-all text-[10px] font-black uppercase tracking-[0.3em] ${
+                focusFilter 
+                ? 'border-[var(--neon-pink)]/40 text-[var(--neon-pink)] bg-[var(--neon-pink)]/5' 
+                : 'border-[var(--neon-cyan)]/20 text-[var(--neon-cyan)] hover:bg-[var(--neon-cyan)] hover:text-white'
+              }`}
+            >
+              {focusFilter ? 'RESET FOCUS' : 'SYSTEM OVERVIEW'}
+            </button>
           </div>
         </div>
-
-        {/* Dealership Performance - Grouped Entities */}
-        <div className="glass-2026 p-12 squircle haptic-card glow-rose">
-          <div className="flex justify-between items-start mb-16">
-            <div>
-              <span className="text-[10px] font-black text-rose-600 uppercase tracking-[0.4em] mb-2 block">Aggregate Group Rank</span>
-              <h3 className="text-4xl font-black tracking-tighter text-slate-900 leading-none">Dealership Performance</h3>
-            </div>
-            <div className="w-14 h-14 glass-2026 squircle-sm flex items-center justify-center text-2xl shadow-lg">🏬</div>
-          </div>
-          <div className="h-[400px]">
+        
+        <div className="h-[650px] overflow-y-auto custom-scroll pr-4 -mr-4">
+          <div style={{ height: `${chartHeight}px`, width: '100%' }}>
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={stats.byShop.slice(0, 10)} layout="vertical" margin={{ left: 20, right: 80 }}>
+              <BarChart 
+                data={dealersWithShare} 
+                layout="vertical" 
+                margin={{ left: 10, right: 100, top: 10, bottom: 10 }}
+                onClick={(data: any) => { if(data?.activePayload?.[0]) onFocus(data.activePayload[0].payload.name); }}
+                style={{ cursor: 'pointer' }}
+              >
+                <defs>
+                  <linearGradient id="barGradient" x1="0" y1="0" x2="1" y2="0">
+                    <stop offset="0%" stopColor="var(--neon-cyan)" stopOpacity={0.9}/>
+                    <stop offset="100%" stopColor="var(--neon-cyan)" stopOpacity={0.05}/>
+                  </linearGradient>
+                  <linearGradient id="barGradientActive" x1="0" y1="0" x2="1" y2="0">
+                    <stop offset="0%" stopColor="var(--neon-lime)" stopOpacity={1}/>
+                    <stop offset="100%" stopColor="var(--neon-lime)" stopOpacity={0.2}/>
+                  </linearGradient>
+                </defs>
                 <XAxis type="number" hide />
-                <YAxis dataKey="name" type="category" width={140} tick={{ fill: '#8e8e93', fontSize: 10, fontWeight: 800 }} axisLine={false} tickLine={false} />
-                <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,45,85,0.03)', radius: 16 }} />
-                <Bar 
-                  dataKey="sales" 
-                  radius={[0, 20, 20, 0]} 
-                  barSize={24} 
-                  fill="#FF2D55"
-                  activeBar={<Rectangle fill="#b31d3b" stroke="#FF2D55" strokeWidth={2} />}
-                >
-                  <LabelList dataKey="sales" position="right" offset={20} style={{ fontSize: 14, fontWeight: 900, fill: '#1c1c1e' }} />
+                <YAxis 
+                  dataKey="name" 
+                  type="category" 
+                  width={180} 
+                  tick={<ClickableTick onFocus={onFocus} currentFocus={focusFilter} />} 
+                  axisLine={false} 
+                  tickLine={false} 
+                  interval={0}
+                />
+                <Tooltip content={<CustomTooltip />} cursor={{ fill: 'var(--text-dim)', fillOpacity: 0.05 }} />
+                <Bar dataKey="sales" radius={[0, 8, 8, 0]} barSize={26}>
+                   {dealersWithShare.map((entry, index) => (
+                     <Cell 
+                       key={`cell-${index}`} 
+                       fill={focusFilter === entry.name ? "url(#barGradientActive)" : "url(#barGradient)"}
+                       className="transition-all duration-700"
+                     />
+                   ))}
+                   <LabelList 
+                     dataKey="sales" 
+                     position="right" 
+                     content={(props: any) => {
+                       const { x, y, width, value, index } = props;
+                       const d = dealersWithShare[index];
+                       const diff = d.prevSales !== undefined ? value - d.prevSales : 0;
+                       const isPositive = diff >= 0;
+                       return (
+                         <g>
+                           <text x={x + width + 16} y={y + 18} fill="var(--text-main)" fontSize={13} fontWeight={900} fontFamily="JetBrains Mono">{value}</text>
+                           {d.prevSales !== undefined && (
+                             <text x={x + width + 55} y={y + 18} fill={isPositive ? 'var(--neon-lime)' : 'var(--neon-pink)'} fontSize={10} fontWeight={800} fontFamily="JetBrains Mono">
+                               {isPositive ? '+' : ''}{diff}
+                             </text>
+                           )}
+                         </g>
+                       );
+                     }}
+                   />
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
@@ -104,78 +196,90 @@ export const Dashboard: React.FC<{ stats: DashboardStats, prevStats: DashboardSt
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-        {/* Inventory Mix - Pie Chart Interactivity */}
-        <div className="glass-2026 p-12 squircle haptic-card glow-indigo lg:col-span-1">
-          <div className="flex justify-between items-start mb-16">
-            <div>
-              <span className="text-[10px] font-black text-indigo-600 uppercase tracking-[0.4em] mb-2 block">Variant Distribution</span>
-              <h3 className="text-4xl font-black tracking-tighter text-slate-900 leading-none">Portfolio</h3>
-            </div>
+      <div className={`grid grid-cols-1 lg:grid-cols-2 gap-12 ${dimClass}`}>
+        <div className={`neon-card p-12 flex flex-col min-h-[550px] transition-all duration-700 ${focusFilter ? 'border-[var(--neon-lime)]/30' : ''}`}>
+          <div className="mb-12">
+            <h3 className="text-2xl font-black tracking-tight text-[var(--text-main)] uppercase italic">
+              {focusFilter ? 'Sub-Node Density' : 'Terminal Performance'}
+            </h3>
+            <p className="text-[10px] font-bold text-[var(--text-dim)] tracking-[0.4em] uppercase mt-3">
+              Direct Sales Distribution
+            </p>
           </div>
-          <div className="h-[350px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie 
-                  data={pieData} 
-                  innerRadius={60} 
-                  outerRadius={100} 
-                  paddingAngle={8} 
-                  dataKey="sales" 
-                  stroke="none"
-                  animationBegin={0}
-                  animationDuration={1500}
-                >
-                  {pieData.map((_, index) => (
-                    <Cell 
-                      key={index} 
-                      fill={COLORS[index % COLORS.length]} 
-                      style={{ cursor: 'pointer', transition: 'all 0.3s ease' }}
-                      className="hover:scale-105 origin-center transform transition-transform"
-                    />
-                  ))}
-                </Pie>
-                <Tooltip content={<CustomTooltip type="pie" />} />
-                <Legend verticalAlign="bottom" iconType="circle" wrapperStyle={{ fontSize: 10, fontWeight: 900, textTransform: 'uppercase', paddingTop: 20 }} />
-              </PieChart>
-            </ResponsiveContainer>
+          
+          <div className="flex-grow space-y-10">
+            {(focusFilter && stats.dealerShopMap[focusFilter] ? stats.dealerShopMap[focusFilter] : stats.byShop).slice(0, 8).map((shop, i, arr) => {
+              const maxVal = Math.max(...arr.map(s => s.sales));
+              const widthPercentage = (shop.sales / maxVal) * 100;
+              const accentColor = focusFilter ? 'var(--neon-lime)' : 'var(--neon-cyan)';
+              
+              return (
+                <div key={i} className="group relative">
+                  <div className="flex justify-between items-end mb-4">
+                    <span className="text-[12px] font-black text-[var(--text-dim)] uppercase tracking-tight truncate max-w-[240px] group-hover:text-[var(--text-main)] transition-colors duration-500">{shop.name}</span>
+                    <span className="text-sm font-black text-[var(--text-main)] font-mono">{shop.sales} <span className="text-[9px] text-[var(--text-dim)] font-bold ml-1">U</span></span>
+                  </div>
+                  <div className="h-2.5 w-full bg-[var(--text-dim)]/5 rounded-full overflow-hidden border border-[var(--border)]">
+                    <div className="h-full rounded-full transition-all duration-1000 opacity-80" style={{ width: `${widthPercentage}%`, background: `linear-gradient(to right, transparent, ${accentColor})` }} />
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
 
-        {/* Towns - Enhanced Visibility and Interaction */}
-        <div className="glass-2026 p-12 squircle haptic-card glow-blue lg:col-span-2">
-          <div className="mb-12 flex justify-between items-center">
-            <div>
-              <span className="text-[11px] font-black text-blue-600 uppercase tracking-[0.5em] mb-2 block">Regional Operations Intelligence</span>
-              <h3 className="text-5xl font-black text-slate-900 tracking-tighter leading-none">Towns</h3>
-            </div>
-            <div className="flex items-center gap-4">
-              <div className="text-right">
-                <span className="text-[10px] font-black text-slate-400 uppercase block">Active Hubs</span>
-                <span className="text-2xl font-black text-slate-900">{stats.byBranch.length}</span>
-              </div>
-              <div className="w-16 h-16 bg-blue-600 squircle-sm flex items-center justify-center text-3xl shadow-xl shadow-blue-200">📍</div>
-            </div>
+        <div className="neon-card p-12 bg-gradient-to-br from-[var(--text-main)]/[0.01] to-transparent flex flex-col">
+          <div className="mb-10">
+            <h3 className="text-2xl font-black tracking-tight text-[var(--text-main)] uppercase italic">Portfolio Mix</h3>
+            <p className="text-[10px] font-bold text-[var(--text-dim)] tracking-[0.4em] uppercase mt-3">Product Volume Distribution</p>
           </div>
-          <div className="h-[350px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={stats.byBranch.slice(0, 12)} margin={{ top: 20, bottom: 40 }}>
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#1c1c1e', fontSize: 11, fontWeight: 800 }} height={60} interval={0} angle={-15} textAnchor="end" />
-                <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(0,122,255,0.05)', radius: 10 }} />
-                <Bar 
-                  dataKey="sales" 
-                  radius={[12, 12, 0, 0]} 
-                  barSize={50} 
-                  fill="#007aff"
-                  activeBar={<Rectangle fill="#0056b3" stroke="#007AFF" strokeWidth={2} />}
-                >
-                   {stats.byBranch.map((_, index) => (
-                     <Cell key={index} fill={index < 3 ? '#007aff' : 'rgba(0,122,255,0.2)'} style={{ transition: 'all 0.3s' }} />
-                   ))}
-                   <LabelList dataKey="sales" position="top" style={{ fontSize: 16, fontWeight: 900, fill: '#1c1c1e' }} offset={15} />
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
+          
+          <div className="flex-grow flex flex-col xl:flex-row items-center gap-12">
+            <div className="relative w-full aspect-square max-w-[300px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={modelData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius="65%"
+                    outerRadius="100%"
+                    paddingAngle={5}
+                    dataKey="value"
+                    stroke="none"
+                  >
+                    {modelData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip content={<CustomTooltip />} />
+                </PieChart>
+              </ResponsiveContainer>
+              <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                 <span className="text-[10px] font-black text-[var(--text-dim)] uppercase tracking-[0.4em]">Total Units</span>
+                 <div className="text-4xl font-black text-[var(--text-main)] tracking-tighter">{stats.totalSales}</div>
+              </div>
+            </div>
+
+            <div className="flex-grow w-full space-y-4">
+              <div className="grid grid-cols-1 gap-3">
+                {modelData.map((m, i) => (
+                  <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-[var(--text-main)]/[0.02] border border-[var(--border)] hover:bg-[var(--text-main)]/[0.05] transition-all group">
+                    <div className="flex items-center gap-3">
+                      <div className="w-2.5 h-2.5 rounded-full shadow-sm" style={{ backgroundColor: COLORS[i % COLORS.length] }} />
+                      <span className="text-[11px] font-black text-[var(--text-dim)] uppercase tracking-tight group-hover:text-[var(--text-main)] transition-colors truncate max-w-[140px]">
+                        {m.name}
+                      </span>
+                    </div>
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-sm font-black text-[var(--text-main)] font-mono">{m.value}</span>
+                      <span className="text-[9px] font-bold text-[var(--text-dim)] uppercase">Units</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <p className="text-[9px] font-bold text-[var(--text-dim)] text-center uppercase tracking-[0.3em] pt-4">Top 6 Market Drivers</p>
+            </div>
           </div>
         </div>
       </div>
